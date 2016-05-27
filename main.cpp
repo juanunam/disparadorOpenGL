@@ -16,6 +16,8 @@ using namespace std;
 
 //================================================================
 //================================================================
+GLfloat mat_especular[] = { 1.0, 1.0, 1.0, 1.0 };
+  GLfloat no_shininess[] = { 128.0 };
 double rotate_z = 0;
 double rotate_y = 0;
 double rotate_x = 0;
@@ -27,14 +29,24 @@ int miraZ=0;
 GLuint indice = glGenLists(55);
 map<int,GLuint> mapaCubos;
 map<int,int> tamanoCubos;
-map<int,pair<int,int>> rotacionesCubo;
+map<int, pair<int,int> > rotacionesCubo;
 int numeroCubos=0;
-double desplazamientosCubo[5][3]=
+double desplazamientosCubo[15][3]=
 {
   {0,0,0},
   {15,0,0},
   {0,15,0},
   {-15,0,0},
+  {2,-15,0},
+  {3,0,0},
+  {15,0,0},
+  {0,15,0},
+  {-15,0,0},
+  {4,-15,0},
+  {0,2,0},
+  {15,0,0},
+  {1,15,0},
+  {-15,1,0},
   {0,-15,0}
 };
 //================================================================
@@ -284,6 +296,7 @@ string posible(string actual);
 void hacerPuntoRojo();
 void moverAleatoriamenteCubos();
 void generaMira();
+int cubosRestantes();
 //================================================================
 //================================================================
 //================================================================
@@ -302,14 +315,6 @@ bool completado(){
   return true;
 }
 
-string convierteColores(){
-  string nodos="";
-  for (int i = 0; i < 54; ++i)
-  {
-     nodos+=to_string(colores[i]);
-  }
-  return nodos;
-}
 bool pegarCubo(int cubo){
     if(miraX+1>=desplazamientosCubo[cubo][1] &&  miraX-1<=desplazamientosCubo[cubo][1] && miraY+1>=desplazamientosCubo[cubo][2] &&  miraY-1<=desplazamientosCubo[cubo][2]  )
       return true;
@@ -382,11 +387,27 @@ void dibujaVertice(int vertice){
 }
 void cuboRubik()
 {
+
+    glMaterialfv(GL_FRONT, GL_AMBIENT, color[7]);
+    glMaterialfv(GL_FRONT, GL_DIFFUSE, color[7]);
+    glMaterialfv(GL_FRONT, GL_SPECULAR, color[7]);
+    glMaterialfv(GL_FRONT, GL_SHININESS, no_shininess);
+    
+
+  
   glColor3f(1.0,1.0,1.0);
   time(&horaActual);
   double segundos=difftime(horaActual,horaInicio);
-  string cadena="Puntaje : "+to_string(segundos);
- 
+  char segundosChar[50];
+
+  sprintf (segundosChar, "%lf faltan %d cubos",segundos,cubosRestantes());
+  string cadena="Puntaje : ";
+  for (int i = 0; i < strlen(segundosChar); ++i)
+  {
+    cadena+=segundosChar[i];
+  }
+  if(!cubosRestantes())
+    cadena="Ganaste!!";
 
   glRasterPos3i( 0,-15, 18);
   for (int i = 0; i < cadena.size(); ++i)
@@ -397,6 +418,10 @@ void cuboRubik()
   for(int i=0;i<tamanoCubos[k];i=i+1){ 
 
     glPushMatrix();
+    glMaterialfv(GL_FRONT, GL_AMBIENT, color[colores[i]]);
+    glMaterialfv(GL_FRONT, GL_DIFFUSE, color[colores[i]]);
+    glMaterialfv(GL_FRONT, GL_SPECULAR, color[colores[i]]);
+    glMaterialfv(GL_FRONT, GL_SHININESS, no_shininess);
     glTranslatef(desplazamientosCubo[k][0],desplazamientosCubo[k][1],desplazamientosCubo[k][2]);
    
     glRotatef(rotacionesCubo[k].first,0,1,0);
@@ -416,35 +441,36 @@ void cuboRubik()
 void moverAleatoriamenteCubos(){
   for(int i=0;i<numeroCubos;i++){
     int opcion=rand()%3;
-    int orientacion=(rand()*i+3)%2;
-    int orientacion2=(rand()*i+323+i)%3;
+    int orientacion=(rand()*i)%2;
+    int orientacion2=(rand()*i+i)%3;
+    double desplazamientoActual= i/10+0.5;
     if(orientacion2==0){
       if(orientacion==1){
         if(desplazamientosCubo[i][2]<10)
-          desplazamientosCubo[i][2]+=0.1;
+          desplazamientosCubo[i][2]+=desplazamientoActual;
   
       }else{
         if(desplazamientosCubo[i][2]>-10)
-          desplazamientosCubo[i][2]-=0.1;
+          desplazamientosCubo[i][2]-=desplazamientoActual;
       }
     }else if(orientacion2==1){
       if(orientacion==1){
         if(desplazamientosCubo[i][1]<30)
-          desplazamientosCubo[i][1]+=0.1;
+          desplazamientosCubo[i][1]+=desplazamientoActual;
   
       }else{
         if(desplazamientosCubo[i][1]>-30)
-          desplazamientosCubo[i][1]-=0.1;
+          desplazamientosCubo[i][1]-=desplazamientoActual;
       }
      
     }else if(orientacion2==2){
       if(orientacion==1){
         if(desplazamientosCubo[i][0]<25)
-          desplazamientosCubo[i][0]+=0.1;
+          desplazamientosCubo[i][0]+=desplazamientoActual;
   
       }else{
         if(desplazamientosCubo[i][0]>-25)
-          desplazamientosCubo[i][0]-=0.1;
+          desplazamientosCubo[i][0]-=desplazamientoActual;
       }
      
     }
@@ -452,6 +478,14 @@ void moverAleatoriamenteCubos(){
       rotacionesCubo[i].first+=1; 
     
   }
+}
+int cubosRestantes(){
+  int suma=0;
+  for(int i=0;i<numeroCubos;i++)
+    if(tamanoCubos[i]>0)
+      suma++;
+
+  return suma;
 }
 void specialKeys( int key, int x, int y )
 {
@@ -521,7 +555,31 @@ glTranslatef(translate_x, translate_y, 0.0 );
     generaMira();
     glutSwapBuffers();
 }
+void inicializaLuz(){
+  glLightModeli(GL_LIGHT_MODEL_LOCAL_VIEWER,GL_TRUE);
+   glEnable(GL_LIGHTING);
+   glEnable(GL_LIGHT0);
+   GLfloat light_ambient[] = { 0.8, 0.8, 0.8, 1.0 };
+GLfloat light_diffuse[] = { 0.8,  0.8, 0.8, 1.0 };
+GLfloat light_specular[] = { 1.0, 1.0, 1.0, 1.0 };
+GLfloat light_position[] = { 0.0, 0.0, 500.0, 1.0 };
+
+glLightfv(GL_LIGHT0, GL_AMBIENT, light_ambient);
+glLightfv(GL_LIGHT0, GL_DIFFUSE, light_diffuse);
+glLightfv(GL_LIGHT0, GL_SPECULAR, light_specular);
+glLightfv(GL_LIGHT0, GL_POSITION, light_position);
+     
+
+
+  
+   
+}
 void generaMira(){
+  glMaterialfv(GL_FRONT, GL_AMBIENT, color[7]);
+    glMaterialfv(GL_FRONT, GL_DIFFUSE, color[7]);
+    glMaterialfv(GL_FRONT, GL_SPECULAR, color[7]);
+    glMaterialfv(GL_FRONT, GL_SHININESS, no_shininess);
+    
    glColor3f(1.0,1.0,1.0);
     set<int> listaMiras;
     std::set<int>::iterator it;
@@ -634,6 +692,7 @@ int main( int argc, char **argv )
     glEnable( GL_BLEND );
   glutSetCursor(GLUT_CURSOR_NONE);
    init();
+   inicializaLuz();
     glutTimerFunc(0, timer, 0);
     glutMainLoop();
 
