@@ -675,7 +675,7 @@ void init(){
 //=================================================================
 int main( int argc, char **argv )
 {
-    cout<<"Cuantos cubos quieres(1-4):";
+    cout<<"Cuantos cubos quieres(1-15):";
     cin>>numeroCubos;
     glutInit( &argc, argv );
     glutInitDisplayMode( GLUT_RGBA | GLUT_DEPTH | GLUT_DOUBLE );
